@@ -22,7 +22,7 @@ use Minilla::Unsupported;
 use Minilla::ModuleMaker::ModuleBuild;
 use Minilla::ModuleMaker::ModuleBuildTiny;
 use Minilla::ModuleMaker::ExtUtilsMakeMaker;
-use Minilla::Util qw(slurp_utf8 find_dir cmd spew_raw slurp_raw spew_utf8);
+use Minilla::Util qw(slurp_utf8 find_file_by cmd spew_raw slurp_raw spew_utf8);
 use Encode qw(decode_utf8);
 use URI;
 
@@ -220,7 +220,7 @@ sub cc_warnings{
 sub _build_dir {
     my $self = shift;
 
-    my $gitdir = find_dir('.git')
+    my $gitdir = find_file_by {-e $_} '.git'
         or errorf("Current directory is not in git(%s)\n", Cwd::getcwd());
     $gitdir = File::Spec->rel2abs($gitdir);
     my $base_dir = dirname($gitdir);
