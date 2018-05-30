@@ -14,6 +14,7 @@ use parent qw(Exporter);
 
 our @EXPORT_OK = qw(
     find_dir find_file
+    find_file_by
     randstr
     slurp slurp_utf8 slurp_raw
     spew  spew_utf8  spew_raw
@@ -83,36 +84,35 @@ sub edit_file {
     system( $editor, $file );
 }
 
-sub find_file {
-    my ($file) = @_;
+sub find_file_by (&@) {
+    my ($test, $file) = @_;
+    local $_;
 
     my $dir = Cwd::getcwd();
     my %seen;
     while ( -d $dir ) {
         return undef if $seen{$dir}++;    # guard from deep recursion
-        if ( -f "$dir/$file" ) {
-            return "$dir/$file";
+        $_ = "$dir/$file";
+        if ( $test->($dir) ) {
+            return $_;
         }
         $dir = File::Basename::dirname($dir);
     }
 
     return undef;
+
+}
+
+sub find_file {
+    my ($file) = @_;
+
+    find_file_by {-f $_} $file;
 }
 
 sub find_dir {
     my ($file) = @_;
 
-    my $dir = Cwd::getcwd();
-    my %seen;
-    while ( -d $dir ) {
-        return undef if $seen{$dir}++;    # guard from deep recursion
-        if ( -d "$dir/$file" ) {
-            return "$dir/$file";
-        }
-        $dir = File::Basename::dirname($dir);
-    }
-
-    return undef;
+    find_file_by {-d $_} $file;
 }
 
 sub require_optional {
